@@ -85,4 +85,5 @@ python -m prozorro_cli tender UA-2026-06-15-003439-a --guid
 3. GitHub Actions перевірить тести, збере wheel і sdist, додасть їх до Release
    та опублікує пакет у PyPI.
 
-Публікація використовує PyPI Trusted Publishing і GitHub environment `pypi`.
+Для публікації потрібен GitHub Actions secret `PYPI_API_TOKEN` з API-токеном
+PyPI. Job публікації запускається в GitHub environment `pypi`.
