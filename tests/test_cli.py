@@ -21,8 +21,26 @@ class CliTests(unittest.TestCase):
             exit_code = main(list(arguments))
         return exit_code, stdout.getvalue()
 
-    def test_link(self) -> None:
+    @patch(
+        "prozorro_cli.cli.public_api_link",
+        return_value=(
+            "https://public-api.prozorro.gov.ua/api/2.5/tenders/"
+            f"{GUID}"
+        ),
+    )
+    def test_link(self, public_api_link_mock) -> None:
         exit_code, output = self.run_cli("tender", TENDER_ID, "--link")
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(
+            output,
+            "https://public-api.prozorro.gov.ua/api/2.5/tenders/"
+            f"{GUID}\n",
+        )
+        public_api_link_mock.assert_called_once_with(TENDER_ID)
+
+    def test_link_html(self) -> None:
+        exit_code, output = self.run_cli("tender", TENDER_ID, "--link-html")
 
         self.assertEqual(exit_code, 0)
         self.assertEqual(
@@ -31,7 +49,7 @@ class CliTests(unittest.TestCase):
         )
 
     def test_stream_configuration_is_safe_with_string_io(self) -> None:
-        exit_code, output = self.run_cli("tender", TENDER_ID, "--link")
+        exit_code, output = self.run_cli("tender", TENDER_ID, "--link-html")
 
         self.assertEqual(exit_code, 0)
         self.assertIn(TENDER_ID, output)

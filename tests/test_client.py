@@ -9,6 +9,7 @@ from prozorro_cli.client import (
     fetch_tender,
     normal_guid,
     parse_tender_reference,
+    public_api_link,
     resolve_guid,
     resolve_tender_id,
     tender_link,
@@ -26,6 +27,23 @@ class ClientTests(unittest.TestCase):
             tender_link(TENDER_ID),
             f"https://prozorro.gov.ua/tender/{TENDER_ID}",
         )
+
+    @patch("prozorro_cli.client.fetch_json")
+    def test_public_api_link_from_tender_id(self, fetch_json_mock) -> None:
+        fetch_json_mock.return_value = {"id": GUID, "tenderID": TENDER_ID}
+
+        self.assertEqual(
+            public_api_link(TENDER_ID),
+            f"https://public-api.prozorro.gov.ua/api/2.5/tenders/{GUID}",
+        )
+
+    @patch("prozorro_cli.client.fetch_json")
+    def test_public_api_link_from_uuid_skips_network(self, fetch_json_mock) -> None:
+        self.assertEqual(
+            public_api_link(NORMAL_GUID),
+            f"https://public-api.prozorro.gov.ua/api/2.5/tenders/{GUID}",
+        )
+        fetch_json_mock.assert_not_called()
 
     def test_invalid_reference_is_rejected(self) -> None:
         with self.assertRaisesRegex(ProzorroError, "Очікується UA-ID"):

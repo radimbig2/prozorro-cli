@@ -9,6 +9,7 @@ from prozorro_cli.client import (
     ProzorroError,
     fetch_tender,
     normal_guid,
+    public_api_link,
     resolve_guid,
     tender_link,
 )
@@ -42,7 +43,12 @@ def build_parser() -> argparse.ArgumentParser:
     output_group.add_argument(
         "--link",
         action="store_true",
-        help="вивести посилання на сторінку тендера",
+        help="вивести посилання на повний JSON у Public API",
+    )
+    output_group.add_argument(
+        "--link-html",
+        action="store_true",
+        help="вивести посилання на HTML-сторінку тендера",
     )
     output_group.add_argument(
         "--guid",
@@ -65,6 +71,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         if args.command == "tender":
             if args.link:
+                print(public_api_link(args.reference))
+                return 0
+
+            if args.link_html:
                 print(tender_link(args.reference))
                 return 0
 

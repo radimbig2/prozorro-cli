@@ -91,6 +91,11 @@ def tender_link(reference: str, *, timeout: float = 30.0) -> str:
     return TENDER_PAGE_URL.format(tender_id=quote(tender_id, safe=""))
 
 
+def public_api_link(reference: str, *, timeout: float = 30.0) -> str:
+    guid = resolve_guid(reference, timeout=timeout)
+    return PUBLIC_API_URL.format(guid=guid)
+
+
 def fetch_json(url: str, *, timeout: float = 30.0) -> dict[str, Any]:
     request = Request(
         url,

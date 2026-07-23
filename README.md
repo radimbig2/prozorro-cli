@@ -6,8 +6,11 @@
 ## Команди
 
 ```powershell
-# Посилання на сторінку тендера (без мережевого запиту)
+# Посилання на повний JSON у Public API
 prozorro-cli tender UA-2026-06-15-003439-a --link
+
+# Посилання на HTML-сторінку тендера
+prozorro-cli tender UA-2026-06-15-003439-a --link-html
 
 # Внутрішній id Prozorro
 prozorro-cli tender UA-2026-06-15-003439-a --guid
