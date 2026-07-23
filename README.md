@@ -12,6 +12,15 @@ prozorro-cli tender UA-2026-06-15-003439-a --link
 # Посилання на HTML-сторінку тендера
 prozorro-cli tender UA-2026-06-15-003439-a --link-html
 
+# Надрукувати й відкрити JSON Public API у браузері
+prozorro-cli tender UA-2026-06-15-003439-a --link --open
+
+# Надрукувати й відкрити HTML-сторінку у браузері
+prozorro-cli tender UA-2026-06-15-003439-a --link-html --open
+
+# Скорочений alias для --link-html
+prozorro-cli tender UA-2026-06-15-003439-a --linkhtml --open
+
 # Внутрішній id Prozorro
 prozorro-cli tender UA-2026-06-15-003439-a --guid
 

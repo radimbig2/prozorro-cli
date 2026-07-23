@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import webbrowser
 from collections.abc import Sequence
 
 from prozorro_cli.client import (
@@ -20,6 +21,12 @@ def configure_windows_streams() -> None:
         reconfigure = getattr(stream, "reconfigure", None)
         if reconfigure is not None:
             reconfigure(encoding="utf-8")
+
+
+def print_link(url: str, *, open_in_browser: bool) -> None:
+    print(url)
+    if open_in_browser and not webbrowser.open(url, new=2):
+        raise ProzorroError("Не вдалося відкрити посилання у браузері.")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -47,6 +54,8 @@ def build_parser() -> argparse.ArgumentParser:
     )
     output_group.add_argument(
         "--link-html",
+        "--linkhtml",
+        dest="link_html",
         action="store_true",
         help="вивести посилання на HTML-сторінку тендера",
     )
@@ -60,6 +69,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="вивести внутрішній id у стандартному форматі UUID",
     )
+    tender_parser.add_argument(
+        "--open",
+        action="store_true",
+        help="відкрити посилання з --link або --link-html у браузері",
+    )
     return parser
 
 
@@ -70,12 +84,21 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     try:
         if args.command == "tender":
+            if args.open and not (args.link or args.link_html):
+                parser.error("--open потребує --link або --link-html.")
+
             if args.link:
-                print(public_api_link(args.reference))
+                print_link(
+                    public_api_link(args.reference),
+                    open_in_browser=args.open,
+                )
                 return 0
 
             if args.link_html:
-                print(tender_link(args.reference))
+                print_link(
+                    tender_link(args.reference),
+                    open_in_browser=args.open,
+                )
                 return 0
 
             if args.guid or args.guid_normal:

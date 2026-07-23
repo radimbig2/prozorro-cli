@@ -48,6 +48,58 @@ class CliTests(unittest.TestCase):
             f"https://prozorro.gov.ua/tender/{TENDER_ID}\n",
         )
 
+    def test_linkhtml_alias(self) -> None:
+        exit_code, output = self.run_cli("tender", TENDER_ID, "--linkhtml")
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(
+            output,
+            f"https://prozorro.gov.ua/tender/{TENDER_ID}\n",
+        )
+
+    @patch("prozorro_cli.cli.webbrowser.open", return_value=True)
+    @patch(
+        "prozorro_cli.cli.public_api_link",
+        return_value=(
+            "https://public-api.prozorro.gov.ua/api/2.5/tenders/"
+            f"{GUID}"
+        ),
+    )
+    def test_link_open(
+        self,
+        public_api_link_mock,
+        browser_open_mock,
+    ) -> None:
+        exit_code, output = self.run_cli(
+            "tender",
+            TENDER_ID,
+            "--link",
+            "--open",
+        )
+
+        api_url = (
+            "https://public-api.prozorro.gov.ua/api/2.5/tenders/"
+            f"{GUID}"
+        )
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(output, f"{api_url}\n")
+        public_api_link_mock.assert_called_once_with(TENDER_ID)
+        browser_open_mock.assert_called_once_with(api_url, new=2)
+
+    @patch("prozorro_cli.cli.webbrowser.open", return_value=True)
+    def test_link_html_open(self, browser_open_mock) -> None:
+        exit_code, output = self.run_cli(
+            "tender",
+            TENDER_ID,
+            "--linkhtml",
+            "--open",
+        )
+
+        html_url = f"https://prozorro.gov.ua/tender/{TENDER_ID}"
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(output, f"{html_url}\n")
+        browser_open_mock.assert_called_once_with(html_url, new=2)
+
     def test_stream_configuration_is_safe_with_string_io(self) -> None:
         exit_code, output = self.run_cli("tender", TENDER_ID, "--link-html")
 
