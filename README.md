@@ -1,7 +1,7 @@
 # prozorro-cli
 
-Невелика CLI для отримання публічних даних про тендери Prozorro за номером
-на кшталт `UA-2026-06-15-003439-a`.
+Невелика CLI для отримання публічних даних про тендери Prozorro за UA-ID,
+внутрішнім GUID, стандартним UUID або посиланням.
 
 ## Команди
 
@@ -17,11 +17,24 @@ prozorro-cli tender UA-2026-06-15-003439-a --guid-normal
 
 # Повний JSON із public-api.prozorro.gov.ua
 prozorro-cli tender UA-2026-06-15-003439-a
+
+# Повний JSON за GUID без дефісів
+prozorro-cli tender 5d2590ef8a1b455f8d09ceeae474b21f
+
+# Повний JSON за стандартним UUID
+prozorro-cli tender 5d2590ef-8a1b-455f-8d09-ceeae474b21f
+
+# Повний JSON за посиланням на сторінку тендера
+prozorro-cli tender https://prozorro.gov.ua/tender/UA-2026-06-15-003439-a
+
+# Повний JSON за посиланням Public API
+prozorro-cli tender https://public-api.prozorro.gov.ua/api/2.5/tenders/5d2590ef8a1b455f8d09ceeae474b21f
 ```
 
-Спочатку CLI отримує внутрішній `id` через публічний endpoint
-`https://prozorro.gov.ua/api/tenders/<UA-ID>/summary`, а потім запитує повний
-JSON за адресою `https://public-api.prozorro.gov.ua/api/2.5/tenders/<id>`.
+Для UA-ID і посилання на сторінку CLI спочатку отримує внутрішній `id` через
+публічний endpoint `https://prozorro.gov.ua/api/tenders/<UA-ID>/summary`.
+Для GUID, UUID і посилання Public API цей крок пропускається. Повний JSON
+завантажується з `https://public-api.prozorro.gov.ua/api/2.5/tenders/<id>`.
 
 ## Розробка
 

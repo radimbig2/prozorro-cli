@@ -11,6 +11,7 @@ from prozorro_cli.cli import main
 
 TENDER_ID = "UA-2026-06-15-003439-a"
 GUID = "5d2590ef8a1b455f8d09ceeae474b21f"
+NORMAL_GUID = "5d2590ef-8a1b-455f-8d09-ceeae474b21f"
 
 
 class CliTests(unittest.TestCase):
@@ -66,6 +67,18 @@ class CliTests(unittest.TestCase):
         self.assertEqual(exit_code, 0)
         self.assertEqual(json.loads(output)["data"]["id"], GUID)
         self.assertIn("Електрична енергія", output)
+
+    @patch("prozorro_cli.cli.fetch_tender")
+    def test_default_passes_normal_uuid_to_client(self, fetch_tender_mock) -> None:
+        fetch_tender_mock.return_value = {
+            "data": {"id": GUID, "tenderID": TENDER_ID}
+        }
+
+        exit_code, output = self.run_cli("tender", NORMAL_GUID)
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(json.loads(output)["data"]["id"], GUID)
+        fetch_tender_mock.assert_called_once_with(NORMAL_GUID)
 
 
 if __name__ == "__main__":

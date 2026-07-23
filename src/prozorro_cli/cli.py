@@ -33,9 +33,9 @@ def build_parser() -> argparse.ArgumentParser:
         help="отримати посилання, GUID або повний JSON тендера",
     )
     tender_parser.add_argument(
-        "tender_id",
-        metavar="UA-ID",
-        help="номер тендера, наприклад UA-2026-06-15-003439-a",
+        "reference",
+        metavar="REFERENCE",
+        help="UA-ID, GUID, UUID або посилання на тендер Prozorro",
     )
 
     output_group = tender_parser.add_mutually_exclusive_group()
@@ -65,15 +65,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         if args.command == "tender":
             if args.link:
-                print(tender_link(args.tender_id))
+                print(tender_link(args.reference))
                 return 0
 
             if args.guid or args.guid_normal:
-                guid = resolve_guid(args.tender_id)
+                guid = resolve_guid(args.reference)
                 print(normal_guid(guid) if args.guid_normal else guid)
                 return 0
 
-            payload = fetch_tender(args.tender_id)
+            payload = fetch_tender(args.reference)
             json.dump(payload, sys.stdout, ensure_ascii=False, indent=2)
             sys.stdout.write("\n")
             return 0
