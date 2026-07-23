@@ -1,74 +1,88 @@
 # prozorro-cli
 
-Невелика CLI для отримання публічних даних про тендери Prozorro за UA-ID,
-внутрішнім GUID, стандартним UUID або посиланням.
+CLI.
 
-## Встановлення
+## 🧭 Navigation
+
+- [📦 Installation](#installation)
+- [⌨️ Commands](#commands)
+- [🛠️ Development](#development)
+- [🚀 Release](#release)
+
+<a id="installation"></a>
+
+## 📦 Installation
 
 ```powershell
 pip install prozorro-cli
 prozorro-cli --help
 ```
 
-Для ізольованого глобального встановлення CLI також можна використати
+For an isolated global CLI installation, you can also use
 `pipx install prozorro-cli`.
 
-## Команди
+<a id="commands"></a>
+
+## ⌨️ Commands
 
 ```powershell
-# Посилання на повний JSON у Public API
+# Print the full Public API JSON URL
 prozorro-cli tender UA-2026-06-15-003439-a --link
 
-# Посилання на HTML-сторінку тендера
+# Print the tender HTML page URL
 prozorro-cli tender UA-2026-06-15-003439-a --link-html
 
-# Надрукувати й відкрити JSON Public API у браузері
+# Print and open the Public API JSON in a browser
 prozorro-cli tender UA-2026-06-15-003439-a --link --open
 
-# Надрукувати й відкрити HTML-сторінку у браузері
+# Print and open the HTML page in a browser
 prozorro-cli tender UA-2026-06-15-003439-a --link-html --open
 
-# Скорочений alias для --link-html
+# Short alias for --link-html
 prozorro-cli tender UA-2026-06-15-003439-a --linkhtml --open
 
-# Внутрішній id Prozorro
+# Internal Prozorro ID
 prozorro-cli tender UA-2026-06-15-003439-a --guid
 
-# Той самий id у стандартному форматі UUID
+# The same ID in standard UUID format
 prozorro-cli tender UA-2026-06-15-003439-a --guid-normal
 
-# Повний JSON із public-api.prozorro.gov.ua
+# Full JSON from public-api.prozorro.gov.ua
 prozorro-cli tender UA-2026-06-15-003439-a
 
-# Повний JSON за GUID без дефісів
+# Full JSON by GUID without hyphens
 prozorro-cli tender 5d2590ef8a1b455f8d09ceeae474b21f
 
-# Повний JSON за стандартним UUID
+# Full JSON by standard UUID
 prozorro-cli tender 5d2590ef-8a1b-455f-8d09-ceeae474b21f
 
-# Повний JSON за посиланням на сторінку тендера
+# Full JSON by tender page URL
 prozorro-cli tender https://prozorro.gov.ua/tender/UA-2026-06-15-003439-a
 
-# Повний JSON за посиланням Public API
+# Full JSON by Public API URL
 prozorro-cli tender https://public-api.prozorro.gov.ua/api/2.5/tenders/5d2590ef8a1b455f8d09ceeae474b21f
 
-# Завантажити всі файли з data.documents за посиланням Public API
+# Download all files from data.documents using a Public API URL
 prozorro-cli documents https://public-api.prozorro.gov.ua/api/2.5/tenders/5d2590ef8a1b455f8d09ceeae474b21f --output /temp
 
-# Те саме за UA-ID
+# Download the same files using a UA-ID
 prozorro-cli documents UA-2026-06-15-003439-a --output /temp
 ```
 
-Для UA-ID і посилання на сторінку CLI спочатку отримує внутрішній `id` через
-публічний endpoint `https://prozorro.gov.ua/api/tenders/<UA-ID>/summary`.
-Для GUID, UUID і посилання Public API цей крок пропускається. Повний JSON
-завантажується з `https://public-api.prozorro.gov.ua/api/2.5/tenders/<id>`.
+For a UA-ID or tender page URL, the CLI first retrieves the internal `id` from
+the public `https://prozorro.gov.ua/api/tenders/<UA-ID>/summary` endpoint.
+This step is skipped for GUIDs, UUIDs, and Public API URLs. The full JSON is
+downloaded from
+`https://public-api.prozorro.gov.ua/api/2.5/tenders/<id>`.
 
-Команда `documents` створює каталог із `--output`, якщо його ще немає, і
-завантажує туди всі файли з `data.documents`. Імена беруться з `title`;
-однакові імена не перезаписуються, а отримують суфікси `(2)`, `(3)` тощо.
+The `documents` command creates the directory specified by `--output` if it
+does not exist, then downloads all files from `data.documents`. File names are
+taken from `title`; duplicate names are not overwritten and receive suffixes
+such as `(2)`, `(3)`, and so on.
 
-## Розробка
+<a id="development"></a>
+
+## 🛠️ Development
 
 ```powershell
 $env:PYTHONPATH = "$PWD\src"
@@ -76,14 +90,16 @@ python -m unittest discover -s tests -v
 python -m prozorro_cli tender UA-2026-06-15-003439-a --guid
 ```
 
-## Реліз
+<a id="release"></a>
 
-1. Оновіть `version` у `pyproject.toml` та `__version__` у
+## 🚀 Release
+
+1. Update `version` in `pyproject.toml` and `__version__` in
    `src/prozorro_cli/__init__.py`.
-2. Створіть і опублікуйте GitHub Release з тегом тієї ж версії, наприклад
-   `v0.1.0`.
-3. GitHub Actions перевірить тести, збере wheel і sdist, додасть їх до Release
-   та опублікує пакет у PyPI.
+2. Create and publish a GitHub Release with a tag matching the version, for
+   example `v0.1.0`.
+3. GitHub Actions will run the tests, build the wheel and sdist, attach them to
+   the Release, and publish the package to PyPI.
 
-Для публікації потрібен GitHub Actions secret `PYPI_API_TOKEN` з API-токеном
-PyPI. Job публікації запускається в GitHub environment `pypi`.
+Publishing requires the `PYPI_API_TOKEN` GitHub Actions secret containing a
+PyPI API token. The publishing job runs in the `pypi` GitHub environment.
