@@ -8,6 +8,7 @@ from collections.abc import Sequence
 
 from prozorro_cli.client import (
     ProzorroError,
+    download_documents,
     fetch_tender,
     normal_guid,
     public_api_link,
@@ -74,6 +75,22 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="відкрити посилання з --link або --link-html у браузері",
     )
+
+    documents_parser = subparsers.add_parser(
+        "documents",
+        help="завантажити всі файли з data.documents тендера",
+    )
+    documents_parser.add_argument(
+        "reference",
+        metavar="REFERENCE",
+        help="UA-ID, GUID, UUID або посилання на тендер Prozorro",
+    )
+    documents_parser.add_argument(
+        "--output",
+        required=True,
+        metavar="DIRECTORY",
+        help="каталог для завантажених документів",
+    )
     return parser
 
 
@@ -109,6 +126,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             payload = fetch_tender(args.reference)
             json.dump(payload, sys.stdout, ensure_ascii=False, indent=2)
             sys.stdout.write("\n")
+            return 0
+
+        if args.command == "documents":
+            downloaded = download_documents(args.reference, args.output)
+            for path in downloaded:
+                print(path)
+            print(f"Завантажено документів: {len(downloaded)}")
             return 0
     except ProzorroError as error:
         parser.exit(1, f"Помилка: {error}\n")

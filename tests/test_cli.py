@@ -150,6 +150,29 @@ class CliTests(unittest.TestCase):
         self.assertEqual(json.loads(output)["data"]["id"], GUID)
         fetch_tender_mock.assert_called_once_with(NORMAL_GUID)
 
+    @patch("prozorro_cli.cli.download_documents")
+    def test_documents_downloads_to_output(self, download_documents_mock) -> None:
+        download_documents_mock.return_value = [
+            "/temp/specification.pdf",
+            "/temp/contract.docx",
+        ]
+
+        exit_code, output = self.run_cli(
+            "documents",
+            TENDER_ID,
+            "--output",
+            "/temp",
+        )
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(
+            output,
+            "/temp/specification.pdf\n"
+            "/temp/contract.docx\n"
+            "Завантажено документів: 2\n",
+        )
+        download_documents_mock.assert_called_once_with(TENDER_ID, "/temp")
+
 
 if __name__ == "__main__":
     unittest.main()
