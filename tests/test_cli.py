@@ -22,7 +22,7 @@ class CliTests(unittest.TestCase):
         return exit_code, stdout.getvalue()
 
     @patch(
-        "prozorro_cli.cli.public_api_link",
+        "prozorro_cli.commands.tender.public_api_link",
         return_value=(
             "https://public-api.prozorro.gov.ua/api/2.5/tenders/"
             f"{GUID}"
@@ -57,9 +57,9 @@ class CliTests(unittest.TestCase):
             f"https://prozorro.gov.ua/tender/{TENDER_ID}\n",
         )
 
-    @patch("prozorro_cli.cli.webbrowser.open", return_value=True)
+    @patch("prozorro_cli.commands.tender.webbrowser.open", return_value=True)
     @patch(
-        "prozorro_cli.cli.public_api_link",
+        "prozorro_cli.commands.tender.public_api_link",
         return_value=(
             "https://public-api.prozorro.gov.ua/api/2.5/tenders/"
             f"{GUID}"
@@ -86,7 +86,7 @@ class CliTests(unittest.TestCase):
         public_api_link_mock.assert_called_once_with(TENDER_ID)
         browser_open_mock.assert_called_once_with(api_url, new=2)
 
-    @patch("prozorro_cli.cli.webbrowser.open", return_value=True)
+    @patch("prozorro_cli.commands.tender.webbrowser.open", return_value=True)
     def test_link_html_open(self, browser_open_mock) -> None:
         exit_code, output = self.run_cli(
             "tender",
@@ -106,7 +106,7 @@ class CliTests(unittest.TestCase):
         self.assertEqual(exit_code, 0)
         self.assertIn(TENDER_ID, output)
 
-    @patch("prozorro_cli.cli.resolve_guid", return_value=GUID)
+    @patch("prozorro_cli.commands.tender.resolve_guid", return_value=GUID)
     def test_guid(self, resolve_guid_mock) -> None:
         exit_code, output = self.run_cli("tender", TENDER_ID, "--guid")
 
@@ -114,7 +114,7 @@ class CliTests(unittest.TestCase):
         self.assertEqual(output, f"{GUID}\n")
         resolve_guid_mock.assert_called_once_with(TENDER_ID)
 
-    @patch("prozorro_cli.cli.resolve_guid", return_value=GUID)
+    @patch("prozorro_cli.commands.tender.resolve_guid", return_value=GUID)
     def test_guid_normal(self, resolve_guid_mock) -> None:
         exit_code, output = self.run_cli("tender", TENDER_ID, "--guid-normal")
 
@@ -122,7 +122,7 @@ class CliTests(unittest.TestCase):
         self.assertEqual(output, "5d2590ef-8a1b-455f-8d09-ceeae474b21f\n")
         resolve_guid_mock.assert_called_once_with(TENDER_ID)
 
-    @patch("prozorro_cli.cli.fetch_tender")
+    @patch("prozorro_cli.commands.tender.fetch_tender")
     def test_default_prints_full_json(self, fetch_tender_mock) -> None:
         fetch_tender_mock.return_value = {
             "data": {
@@ -138,7 +138,7 @@ class CliTests(unittest.TestCase):
         self.assertEqual(json.loads(output)["data"]["id"], GUID)
         self.assertIn("Електрична енергія", output)
 
-    @patch("prozorro_cli.cli.fetch_tender")
+    @patch("prozorro_cli.commands.tender.fetch_tender")
     def test_default_passes_normal_uuid_to_client(self, fetch_tender_mock) -> None:
         fetch_tender_mock.return_value = {
             "data": {"id": GUID, "tenderID": TENDER_ID}
@@ -150,7 +150,7 @@ class CliTests(unittest.TestCase):
         self.assertEqual(json.loads(output)["data"]["id"], GUID)
         fetch_tender_mock.assert_called_once_with(NORMAL_GUID)
 
-    @patch("prozorro_cli.cli.download_documents")
+    @patch("prozorro_cli.commands.documents.download_documents")
     def test_documents_downloads_to_output(self, download_documents_mock) -> None:
         download_documents_mock.return_value = [
             "/temp/specification.pdf",

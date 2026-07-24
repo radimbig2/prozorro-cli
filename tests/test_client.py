@@ -6,18 +6,22 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
-from prozorro_cli.client import (
-    ProzorroError,
-    compact_guid,
-    download_document,
+from prozorro_cli.client import download_document
+from prozorro_cli.errors import ProzorroError
+from prozorro_cli.services.documents import (
     download_documents,
-    fetch_tender,
+    safe_document_filename,
+)
+from prozorro_cli.services.references import (
+    compact_guid,
     normal_guid,
     parse_tender_reference,
-    public_api_link,
     resolve_guid,
     resolve_tender_id,
-    safe_document_filename,
+)
+from prozorro_cli.services.tenders import (
+    fetch_tender,
+    public_api_link,
     tender_link,
 )
 
@@ -34,7 +38,7 @@ class ClientTests(unittest.TestCase):
             f"https://prozorro.gov.ua/tender/{TENDER_ID}",
         )
 
-    @patch("prozorro_cli.client.fetch_json")
+    @patch("prozorro_cli.services.references.fetch_json")
     def test_public_api_link_from_tender_id(self, fetch_json_mock) -> None:
         fetch_json_mock.return_value = {"id": GUID, "tenderID": TENDER_ID}
 
@@ -43,7 +47,7 @@ class ClientTests(unittest.TestCase):
             f"https://public-api.prozorro.gov.ua/api/2.5/tenders/{GUID}",
         )
 
-    @patch("prozorro_cli.client.fetch_json")
+    @patch("prozorro_cli.services.references.fetch_json")
     def test_public_api_link_from_uuid_skips_network(self, fetch_json_mock) -> None:
         self.assertEqual(
             public_api_link(NORMAL_GUID),
@@ -86,7 +90,7 @@ class ClientTests(unittest.TestCase):
         with self.assertRaisesRegex(ProzorroError, "підтримуваний тендер"):
             parse_tender_reference("https://prozorro.gov.ua/plans/example")
 
-    @patch("prozorro_cli.client.fetch_json")
+    @patch("prozorro_cli.services.references.fetch_json")
     def test_resolve_guid_uses_summary_endpoint(self, fetch_json_mock) -> None:
         fetch_json_mock.return_value = {"id": GUID, "tenderID": TENDER_ID}
 
@@ -96,36 +100,41 @@ class ClientTests(unittest.TestCase):
             timeout=30.0,
         )
 
-    @patch("prozorro_cli.client.fetch_json")
+    @patch("prozorro_cli.services.references.fetch_json")
     def test_resolve_guid_from_uuid_does_not_call_network(
         self, fetch_json_mock
     ) -> None:
         self.assertEqual(resolve_guid(NORMAL_GUID), GUID)
         fetch_json_mock.assert_not_called()
 
-    @patch("prozorro_cli.client.fetch_json")
+    @patch("prozorro_cli.services.references.fetch_json")
     def test_resolve_guid_rejects_missing_id(self, fetch_json_mock) -> None:
         fetch_json_mock.return_value = {"tenderID": TENDER_ID}
 
         with self.assertRaisesRegex(ProzorroError, "внутрішнього id"):
             resolve_guid(TENDER_ID)
 
-    @patch("prozorro_cli.client.fetch_json")
-    def test_fetch_tender_uses_resolved_guid(self, fetch_json_mock) -> None:
-        fetch_json_mock.side_effect = [
-            {"id": GUID, "tenderID": TENDER_ID},
-            {"data": {"id": GUID, "tenderID": TENDER_ID}},
-        ]
+    @patch("prozorro_cli.services.tenders.fetch_json")
+    @patch("prozorro_cli.services.tenders.resolve_guid", return_value=GUID)
+    def test_fetch_tender_uses_resolved_guid(
+        self,
+        resolve_guid_mock,
+        fetch_json_mock,
+    ) -> None:
+        fetch_json_mock.return_value = {
+            "data": {"id": GUID, "tenderID": TENDER_ID}
+        }
 
         payload = fetch_tender(TENDER_ID)
 
         self.assertEqual(payload["data"]["id"], GUID)
         self.assertEqual(
-            fetch_json_mock.call_args_list[1].args[0],
+            fetch_json_mock.call_args.args[0],
             f"https://public-api.prozorro.gov.ua/api/2.5/tenders/{GUID}",
         )
+        resolve_guid_mock.assert_called_once_with(TENDER_ID, timeout=30.0)
 
-    @patch("prozorro_cli.client.fetch_json")
+    @patch("prozorro_cli.services.tenders.fetch_json")
     def test_fetch_tender_by_guid_skips_summary(self, fetch_json_mock) -> None:
         fetch_json_mock.return_value = {
             "data": {"id": GUID, "tenderID": TENDER_ID}
@@ -139,7 +148,7 @@ class ClientTests(unittest.TestCase):
             timeout=30.0,
         )
 
-    @patch("prozorro_cli.client.fetch_json")
+    @patch("prozorro_cli.services.references.fetch_json")
     def test_resolve_tender_id_from_guid(self, fetch_json_mock) -> None:
         fetch_json_mock.return_value = {
             "data": {"id": GUID, "tenderID": TENDER_ID}
@@ -147,7 +156,7 @@ class ClientTests(unittest.TestCase):
 
         self.assertEqual(resolve_tender_id(GUID), TENDER_ID)
 
-    @patch("prozorro_cli.client.fetch_json")
+    @patch("prozorro_cli.services.references.fetch_json")
     def test_tender_link_from_guid(self, fetch_json_mock) -> None:
         fetch_json_mock.return_value = {
             "data": {"id": GUID, "tenderID": TENDER_ID}
@@ -183,8 +192,8 @@ class ClientTests(unittest.TestCase):
 
             self.assertEqual(destination.read_bytes(), b"document contents")
 
-    @patch("prozorro_cli.client.download_document")
-    @patch("prozorro_cli.client.fetch_tender")
+    @patch("prozorro_cli.services.documents.download_document")
+    @patch("prozorro_cli.services.documents.fetch_tender")
     def test_download_documents_uses_data_documents(
         self,
         fetch_tender_mock,
@@ -222,7 +231,7 @@ class ClientTests(unittest.TestCase):
         )
         self.assertEqual(download_document_mock.call_count, 2)
 
-    @patch("prozorro_cli.client.fetch_tender")
+    @patch("prozorro_cli.services.documents.fetch_tender")
     def test_download_documents_requires_document_url(
         self,
         fetch_tender_mock,
