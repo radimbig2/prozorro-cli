@@ -21,6 +21,24 @@ prozorro-cli --help
 For an isolated global CLI installation, you can also use
 `pipx install prozorro-cli`.
 
+### Agent skill
+
+Install the optional agent skill from this repository:
+
+```powershell
+npx skills add radimbig2/prozorro-cli --skill prozorro-cli -g
+```
+
+For a non-interactive global Codex installation:
+
+```powershell
+npx skills add radimbig2/prozorro-cli --skill prozorro-cli -g -a codex -y
+```
+
+The skill activates only when the user explicitly asks to retrieve or download
+a specific tender or its documents. It does not activate for general Prozorro
+questions, tender analysis, or tender search.
+
 <a id="commands"></a>
 
 ## ⌨️ Commands

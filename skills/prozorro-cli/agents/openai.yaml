@@ -1,0 +1,4 @@
+interface:
+  display_name: "Prozorro CLI"
+  short_description: "Download specific Prozorro tenders and documents"
+  default_prompt: "Use $prozorro-cli to download a specific Prozorro tender or its documents."
