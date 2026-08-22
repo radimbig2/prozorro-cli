@@ -4,14 +4,17 @@ import io
 import json
 import unittest
 from contextlib import redirect_stdout
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
-from prozorro_cli.cli import main
+from prozorro_cli.cli import build_parser, main
 
 
 TENDER_ID = "UA-2026-06-15-003439-a"
 GUID = "5d2590ef8a1b455f8d09ceeae474b21f"
 NORMAL_GUID = "5d2590ef-8a1b-455f-8d09-ceeae474b21f"
+CONTRACT_ID = "a4264fee0db34423808f12f17d8e46ed"
 
 
 class CliTests(unittest.TestCase):
@@ -172,6 +175,99 @@ class CliTests(unittest.TestCase):
             "Завантажено документів: 2\n",
         )
         download_documents_mock.assert_called_once_with(TENDER_ID, "/temp")
+
+    @patch("prozorro_cli.commands.contracts.fetch_contract")
+    def test_contracts_prints_full_json(self, fetch_contract_mock) -> None:
+        fetch_contract_mock.return_value = {
+            "data": {"id": CONTRACT_ID, "status": "active"}
+        }
+
+        exit_code, output = self.run_cli("contracts", CONTRACT_ID)
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(json.loads(output)["data"]["id"], CONTRACT_ID)
+        fetch_contract_mock.assert_called_once_with(CONTRACT_ID)
+
+    @patch("prozorro_cli.commands.contracts.fetch_contract")
+    def test_contracts_save_json_to_output_file(self, fetch_contract_mock) -> None:
+        payload = {"data": {"id": CONTRACT_ID, "status": "active"}}
+        fetch_contract_mock.return_value = payload
+
+        with TemporaryDirectory() as temporary_directory:
+            destination = Path(temporary_directory) / "contract.json"
+            exit_code, output = self.run_cli(
+                "contracts",
+                CONTRACT_ID,
+                "--output",
+                str(destination),
+            )
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(output, f"{destination}\n")
+            self.assertEqual(
+                json.loads(destination.read_text(encoding="utf-8")),
+                payload,
+            )
+
+    @patch("prozorro_cli.commands.contracts.download_contracts_for_tender")
+    def test_contracts_batch_downloads_to_output(self, download_mock) -> None:
+        download_mock.return_value = [
+            Path("/temp/tender.json"),
+            Path(f"/temp/contracts/{CONTRACT_ID}.json"),
+        ]
+
+        exit_code, output = self.run_cli(
+            "contracts",
+            "--tender",
+            TENDER_ID,
+            "--output",
+            "/temp",
+        )
+
+        self.assertEqual(exit_code, 0)
+        self.assertIn("tender.json", output)
+        self.assertIn(f"{CONTRACT_ID}.json", output)
+        self.assertIn("Завантажено JSON: 2", output)
+        download_mock.assert_called_once_with(TENDER_ID, "/temp")
+
+    @patch("prozorro_cli.commands.documents.download_contract_documents")
+    def test_documents_downloads_contract_documents(self, download_mock) -> None:
+        download_mock.return_value = ["/temp/contract.pdf"]
+
+        exit_code, output = self.run_cli(
+            "documents",
+            "--contract",
+            CONTRACT_ID,
+            "--output",
+            "/temp",
+        )
+
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(output, "/temp/contract.pdf\nЗавантажено документів: 1\n")
+        download_mock.assert_called_once_with(CONTRACT_ID, "/temp")
+
+    def test_root_help_lists_contracts(self) -> None:
+        help_text = build_parser().format_help()
+
+        self.assertIn("contracts", help_text)
+        self.assertIn("документи", help_text)
+
+    def test_contracts_help_lists_tender_and_output(self) -> None:
+        parser = build_parser()
+        contracts_parser = next(
+            action.choices["contracts"]
+            for action in parser._actions
+            if hasattr(action, "choices") and action.choices and "contracts" in action.choices
+        )
+
+        help_text = contracts_parser.format_help()
+
+        self.assertIn("--tender", help_text)
+        self.assertIn("--output", help_text)
+
+    def test_contracts_batch_requires_output(self) -> None:
+        with self.assertRaises(SystemExit):
+            main(["contracts", "--tender", TENDER_ID])
 
 
 if __name__ == "__main__":

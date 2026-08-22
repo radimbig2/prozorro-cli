@@ -5,6 +5,7 @@ from pathlib import Path
 
 from prozorro_cli.client import download_document
 from prozorro_cli.errors import ProzorroError
+from prozorro_cli.services.contracts import fetch_contract
 from prozorro_cli.services.tenders import fetch_tender
 
 
@@ -52,6 +53,25 @@ def download_documents(
     timeout: float = 30.0,
 ) -> list[Path]:
     payload = fetch_tender(reference, timeout=timeout)
+    return download_documents_from_payload(payload, output, timeout=timeout)
+
+
+def download_contract_documents(
+    reference: str,
+    output: str | Path,
+    *,
+    timeout: float = 30.0,
+) -> list[Path]:
+    payload = fetch_contract(reference, timeout=timeout)
+    return download_documents_from_payload(payload, output, timeout=timeout)
+
+
+def download_documents_from_payload(
+    payload: dict[str, object],
+    output: str | Path,
+    *,
+    timeout: float = 30.0,
+) -> list[Path]:
     data = payload.get("data")
     documents = data.get("documents") if isinstance(data, dict) else None
     if not isinstance(documents, list):

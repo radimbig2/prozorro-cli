@@ -10,6 +10,12 @@ from prozorro_cli.errors import ProzorroError
 
 SUMMARY_URL = "https://prozorro.gov.ua/api/tenders/{tender_id}/summary"
 PUBLIC_API_URL = "https://public-api.prozorro.gov.ua/api/2.5/tenders/{guid}"
+CONTRACT_PUBLIC_API_URL = (
+    "https://public-api.prozorro.gov.ua/api/2.5/contracts/{guid}"
+)
+TENDER_CONTRACTS_PUBLIC_API_URL = (
+    "https://public-api.prozorro.gov.ua/api/2.5/tenders/{guid}/contracts"
+)
 
 TENDER_ID_PATTERN = re.compile(r"^UA-\d{4}-\d{2}-\d{2}-\d{6}-[a-z]$")
 GUID_PATTERN = re.compile(r"^[0-9a-fA-F]{32}$")
@@ -28,6 +34,11 @@ SUPPORTED_HOSTS = {
 class TenderReference:
     tender_id: str | None = None
     guid: str | None = None
+
+
+@dataclass(frozen=True)
+class ContractReference:
+    guid: str
 
 
 def validate_tender_id(tender_id: str) -> str:
@@ -116,3 +127,25 @@ def normal_guid(guid: str) -> str:
         f"{normalized[0:8]}-{normalized[8:12]}-{normalized[12:16]}-"
         f"{normalized[16:20]}-{normalized[20:32]}"
     )
+
+
+def parse_contract_reference(value: str) -> ContractReference:
+    candidate = value.strip()
+    if GUID_PATTERN.fullmatch(candidate) or NORMAL_GUID_PATTERN.fullmatch(candidate):
+        return ContractReference(guid=compact_guid(candidate))
+
+    parsed = urlsplit(candidate)
+    if parsed.scheme not in {"http", "https"} or parsed.hostname not in SUPPORTED_HOSTS:
+        raise ProzorroError(
+            "Очікується GUID, UUID або посилання на контракт Prozorro."
+        )
+
+    parts = [unquote(part) for part in parsed.path.strip("/").split("/") if part]
+    if len(parts) == 4 and parts[0:3] == ["api", "2.5", "contracts"]:
+        return ContractReference(guid=compact_guid(parts[3]))
+
+    raise ProzorroError("Посилання не веде на підтримуваний контракт Prozorro.")
+
+
+def resolve_contract_guid(reference: str) -> str:
+    return parse_contract_reference(reference).guid

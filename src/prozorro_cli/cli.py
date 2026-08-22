@@ -18,7 +18,9 @@ def configure_windows_streams() -> None:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="prozorro-cli",
-        description="Отримання публічних даних про тендери Prozorro.",
+        description=(
+            "Отримання публічних даних про тендери, контракти та документи Prozorro."
+        ),
     )
     subparsers = parser.add_subparsers(required=True)
     register_commands(subparsers)

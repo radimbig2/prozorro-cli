@@ -80,11 +80,23 @@ prozorro-cli tender https://prozorro.gov.ua/tender/UA-2026-06-15-003439-a
 # Full JSON by Public API URL
 prozorro-cli tender https://public-api.prozorro.gov.ua/api/2.5/tenders/5d2590ef8a1b455f8d09ceeae474b21f
 
+# Full contract JSON to stdout
+prozorro-cli contracts a4264fee0db34423808f12f17d8e46ed
+
+# Full contract JSON to a file
+prozorro-cli contracts a4264fee0db34423808f12f17d8e46ed --output contract.json
+
+# Download a tender and all full contract JSON objects
+prozorro-cli contracts --tender UA-2026-06-15-003439-a --output ./contracts-download
+
 # Download all files from data.documents using a Public API URL
 prozorro-cli documents https://public-api.prozorro.gov.ua/api/2.5/tenders/5d2590ef8a1b455f8d09ceeae474b21f --output /temp
 
 # Download the same files using a UA-ID
 prozorro-cli documents UA-2026-06-15-003439-a --output /temp
+
+# Download all top-level data.documents from a contract
+prozorro-cli documents --contract a4264fee0db34423808f12f17d8e46ed --output /temp
 ```
 
 For a UA-ID or tender page URL, the CLI first retrieves the internal `id` from
@@ -97,6 +109,23 @@ The `documents` command creates the directory specified by `--output` if it
 does not exist, then downloads all files from `data.documents`. File names are
 taken from `title`; duplicate names are not overwritten and receive suffixes
 such as `(2)`, `(3)`, and so on.
+
+### Contracts
+
+The `contracts` command accepts a compact internal GUID, a UUID with hyphens,
+or a Public API contract URL. A single contract is retrieved from
+`https://public-api.prozorro.gov.ua/api/2.5/contracts/<id>`.
+
+With `--tender`, the CLI first retrieves the tender, reads its `data.contracts`
+list, and retrieves the full JSON for every contract. If the tender response
+does not contain a contracts list, it uses the tender contracts collection
+endpoint. The output directory contains the original `tender.json` and a
+`contracts/<id>.json` file for every contract, including cancelled versions.
+
+The `documents --contract` form reads only the contract's top-level
+`data.documents` array. It downloads each document from the URL supplied by
+Prozorro. Documents from contract changes and `previousVersions` are not
+included in this form.
 
 <a id="development"></a>
 
