@@ -56,6 +56,9 @@ prozorro-cli tender UA-2026-06-15-003439-a --link --open
 # Print and open the HTML page in a browser
 prozorro-cli tender UA-2026-06-15-003439-a --link-html --open
 
+# Open the tender HTML page directly
+prozorro-cli tender --open UA-2026-06-15-003439-a
+
 # Short alias for --link-html
 prozorro-cli tender UA-2026-06-15-003439-a --linkhtml --open
 

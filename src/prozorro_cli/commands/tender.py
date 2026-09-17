@@ -47,7 +47,7 @@ def register(subparsers: argparse._SubParsersAction) -> None:
     parser.add_argument(
         "--open",
         action="store_true",
-        help="відкрити посилання з --link або --link-html у браузері",
+        help="відкрити HTML-сторінку тендера у браузері (або посилання з --link/--link-html)",
     )
     parser.set_defaults(handler=handle)
 
@@ -59,15 +59,16 @@ def print_link(url: str, *, open_in_browser: bool) -> None:
 
 
 def handle(args: argparse.Namespace) -> int:
-    if args.open and not (args.link or args.link_html):
-        args.root_parser.error("--open потребує --link або --link-html.")
-
     if args.link:
         print_link(public_api_link(args.reference), open_in_browser=args.open)
         return 0
 
     if args.link_html:
         print_link(tender_link(args.reference), open_in_browser=args.open)
+        return 0
+
+    if args.open:
+        print_link(tender_link(args.reference), open_in_browser=True)
         return 0
 
     if args.guid or args.guid_normal:

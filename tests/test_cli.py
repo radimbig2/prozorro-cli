@@ -103,6 +103,24 @@ class CliTests(unittest.TestCase):
         self.assertEqual(output, f"{html_url}\n")
         browser_open_mock.assert_called_once_with(html_url, new=2)
 
+    @patch("prozorro_cli.commands.tender.webbrowser.open", return_value=True)
+    @patch(
+        "prozorro_cli.commands.tender.tender_link",
+        return_value=f"https://prozorro.gov.ua/tender/{TENDER_ID}",
+    )
+    def test_open_defaults_to_tender_html_page(
+        self,
+        tender_link_mock,
+        browser_open_mock,
+    ) -> None:
+        exit_code, output = self.run_cli("tender", "--open", TENDER_ID)
+
+        html_url = f"https://prozorro.gov.ua/tender/{TENDER_ID}"
+        self.assertEqual(exit_code, 0)
+        self.assertEqual(output, f"{html_url}\n")
+        tender_link_mock.assert_called_once_with(TENDER_ID)
+        browser_open_mock.assert_called_once_with(html_url, new=2)
+
     def test_stream_configuration_is_safe_with_string_io(self) -> None:
         exit_code, output = self.run_cli("tender", TENDER_ID, "--link-html")
 
